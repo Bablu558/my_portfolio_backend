@@ -204,9 +204,20 @@ export const updatePassword = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
+// export const getUserForPortfolio = catchAsyncErrors(async (req, res, next) => {
+//   const id = "68bd605810bb9ba7b847aeb7";
+//   const user = await User.findById(id);
+//   res.status(200).json({
+//     success: true,
+//     user,
+//   });
+// });
+
 export const getUserForPortfolio = catchAsyncErrors(async (req, res, next) => {
-  const id = "68bd605810bb9ba7b847aeb7";
-  const user = await User.findById(id);
+  const user = await User.findOne().select("fullName aboutMe avatar resume githubURL instagramURL facebookURL linkedInURL twitterURL");
+  if (!user) {
+    return next(new ErrorHandler("No user found in DB", 404));
+  }
   res.status(200).json({
     success: true,
     user,
