@@ -21,7 +21,7 @@ app.use(
     cors({
 
       // origin: [process.env.PORTFOLIO_URL, process.env.DASHBOARD_URL],
-      origin: ["http://localhost:5173", "http://localhost:5174", "https://bablu-portfolio-dashboard.netlify.app"],
+      origin: ["http://localhost:5173", "http://localhost:5174", "https://bablu-portfolio-dashboard.netlify.app","https://bablu-kumar.netlify.app"],
       methods: ["GET", "POST", "PUT", "DELETE"],
       credentials: true,
     })
