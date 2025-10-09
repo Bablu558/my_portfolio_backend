@@ -12,7 +12,7 @@ import softwareApplicationRouter from "./router/softwareApplicationRouter.js";
 import skillRouter from "./router/skillRouter.js";
 import projectRouter from "./router/projectRouter.js";
 import certificateRouter from "./router/certificateRouter.js"; 
-
+import ratingRouter from "./router/ratingRouter.js";
 
 const app = express();
 
@@ -47,7 +47,7 @@ app.use("/api/v1/softwareapplication", softwareApplicationRouter);
 app.use("/api/v1/skill", skillRouter);
 app.use("/api/v1/project", projectRouter);
 app.use("/api/v1/certificate", certificateRouter);
-
+app.use("/api/v1/rating", ratingRouter);
 dbConnection()
 app.use(errorMiddleware);
 
