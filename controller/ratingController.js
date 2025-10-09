@@ -3,19 +3,22 @@ import { Rating } from "../models/ratingSchema.js";
 // POST: Save new rating
 export const addRating = async (req, res) => {
   try {
-    const { stars } = req.body;
+    const { stars, name, message } = req.body;
+
     if (!stars || stars < 1 || stars > 5) {
       return res.status(400).json({ message: "Invalid rating value!" });
     }
+    if (!name || !message) {
+      return res.status(400).json({ message: "Name and message are required!" });
+    }
 
-    const rating = await Rating.create({ stars });
+    const rating = await Rating.create({ stars, name, message });
     res.status(201).json({ success: true, rating });
   } catch (error) {
     res.status(500).json({ message: "Error saving rating", error });
   }
 };
 
-// GET: Get average rating
 export const getAverageRating = async (req, res) => {
   try {
     const ratings = await Rating.find();

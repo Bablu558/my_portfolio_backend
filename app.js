@@ -53,5 +53,4 @@ app.use(errorMiddleware);
 
 
 
-// export it as default
 export default app;
