@@ -7,11 +7,11 @@ const ratingSchema = new mongoose.Schema({
     min: 1,
     max: 5,
   },
-  name:{
+  Name:{
     type: String, 
     required: true
   },
-  message: {
+  messagee: {
     type: String, 
     required: true 
   },
