@@ -14,6 +14,8 @@ import projectRouter from "./router/projectRouter.js";
 import certificateRouter from "./router/certificateRouter.js"; 
 import ratingRouter from "./router/ratingRouter.js";
 import blogRouter from "./router/blogRoute.js";
+import sitemapRouter from "./router/sitemapRouter.js";
+
 const app = express();
 
 dotenv.config({ path: "./config/config.env" });
@@ -49,6 +51,7 @@ app.use("/api/v1/project", projectRouter);
 app.use("/api/v1/certificate", certificateRouter);
 app.use("/api/v1/rating", ratingRouter);
 app.use("/api/v1/blog", blogRouter);
+app.use("/", sitemapRouter);
 dbConnection()
 app.use(errorMiddleware);
 
