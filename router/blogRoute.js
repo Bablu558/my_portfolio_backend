@@ -11,8 +11,8 @@ import { isAuthenticated } from "../middleware/auth.js";
 const router = express.Router();
 
 // Public routes
-router.get("/getall",isAuthenticated, getAllBlogs);
-router.get("/get/:id",isAuthenticated, getBlogById);
+router.get("/getall", getAllBlogs);
+router.get("/get/:id", getBlogById);
 
 // Admin routes
 router.post("/create",isAuthenticated,  createBlog);
