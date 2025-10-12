@@ -1,23 +1,22 @@
 import express from "express";
-import axios from "axios";
 
 const router = express.Router();
 
-// ✅ Sitemap Route
 router.get("/sitemap.xml", async (req, res) => {
   try {
     const FRONTEND_URL = "https://tech-blogs-by-bablu-kumar.netlify.app";
     const BACKEND_API = "https://my-portfolio-backend-5p6u.onrender.com/api/v1/blog/getall";
 
-    // Fetch all blogs from your backend
-    const { data } = await axios.get(BACKEND_API);
+    // ✅ Fetch all blogs (without axios)
+    const response = await fetch(BACKEND_API);
+    const data = await response.json();
     const blogs = data.blogs || [];
 
-    // Generate XML structure
+    // ✅ Generate XML
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
     xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
 
-    // ✅ Add static pages
+    // Static pages
     const staticPages = [
       `${FRONTEND_URL}/`,
       `${FRONTEND_URL}/blog`,
@@ -31,7 +30,7 @@ router.get("/sitemap.xml", async (req, res) => {
       xml += `  </url>\n`;
     });
 
-    // ✅ Add dynamic blogs
+    // Dynamic blog URLs
     blogs.forEach((blog) => {
       xml += `  <url>\n`;
       xml += `    <loc>${FRONTEND_URL}/blog/${blog._id}</loc>\n`;
@@ -43,7 +42,7 @@ router.get("/sitemap.xml", async (req, res) => {
 
     xml += `</urlset>`;
 
-    // Send as XML
+    // ✅ Send as XML
     res.header("Content-Type", "application/xml");
     res.send(xml);
   } catch (error) {
