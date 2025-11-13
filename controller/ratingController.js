@@ -3,16 +3,45 @@ import { Rating } from "../models/ratingSchema.js";
 // POST: Save new rating
 export const addRating = async (req, res) => {
   try {
-    const { stars, Name, messagee } = req.body;
+    const { stars, name, message } = req.body;
 
     if (!stars || stars < 1 || stars > 5) {
       return res.status(400).json({ message: "Invalid rating value!" });
     }
-    if (!Name || !messagee) {
-      return res.status(400).json({ message: "Name and message are required!" });
+
+    // ⭐ SAVE rating (name/message optional)
+    const rating = await Rating.create({
+      stars,
+      name: name || "",
+      message: message || ""
+    });
+
+    // ⭐ EMAIL message based on condition
+    const emailText = name
+      ? `
+A new rating has been submitted on your portfolio.
+
+⭐ Rating: ${stars} stars
+👤 Name: ${name}
+💬 Message: ${message}
+      `
+      : `
+Someone just rated your portfolio ⭐${stars} stars.
+(No feedback written)
+      `;
+
+    try {
+      await sendEmail({
+        email: process.env.SMTP_MAIL,
+        subject: `⭐ New Rating Received (${stars} stars)`,
+        message: emailText,
+      });
+
+      console.log("✅ Rating email sent successfully!");
+    } catch (emailError) {
+      console.error("❌ Failed to send rating email:", emailError);
     }
 
-    const rating = await Rating.create({ stars, Name, messagee });
     res.status(201).json({ success: true, rating });
   } catch (error) {
     res.status(500).json({ message: "Error saving rating", error });
