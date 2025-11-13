@@ -1,5 +1,5 @@
 import { Rating } from "../models/ratingSchema.js";
-import { Rating } from "../models/ratingSchema.js";
+import { sendEmail } from "../utils/sendEmail.js";
 // POST: Save new rating
 export const addRating = async (req, res) => {
   try {
