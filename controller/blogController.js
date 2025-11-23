@@ -1,11 +1,25 @@
 import { Blog } from "../models/blogSchema.js";
 import { v2 as cloudinary } from "cloudinary";
 
+// Common helper to get current user id (admin or blog-user)
+const getCurrentUserId = (req) => {
+  if (req.blogUser) return req.blogUser._id; // blog user
+  if (req.user) return req.user._id; // admin user (old)
+  return null;
+};
 
 export const createBlog = async (req, res) => {
   try {
     const { title, category, shortDescription, content } = req.body;
     const { thumbnail } = req.files || {};
+
+    const userId = getCurrentUserId(req);
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Not authenticated" });
+    }
 
     if (!title || !category || !shortDescription || !content || !thumbnail) {
       return res
@@ -14,19 +28,23 @@ export const createBlog = async (req, res) => {
     }
 
     // Upload to Cloudinary
-    const uploadResult = await cloudinary.uploader.upload(thumbnail.tempFilePath, {
-      folder: "PORTFOLIO BLOG IMAGES",
-    });
+    const uploadResult = await cloudinary.uploader.upload(
+      thumbnail.tempFilePath,
+      {
+        folder: "PORTFOLIO BLOG IMAGES",
+      }
+    );
 
     const blog = await Blog.create({
       title,
       category,
       shortDescription,
-      content,
+      content, // Quill HTML
       thumbnail: {
         public_id: uploadResult.public_id,
         url: uploadResult.secure_url,
       },
+      author: userId,
     });
 
     res.status(201).json({
@@ -47,40 +65,80 @@ export const createBlog = async (req, res) => {
 // ✅ Get All Blogs
 export const getAllBlogs = async (req, res) => {
   try {
-    const blogs = await Blog.find().sort({ createdAt: -1 });
-    res.status(200).json({ success: true, blogs });
+    const blogs = await Blog.find()
+      .sort({ createdAt: -1 })
+      .populate("author", "name email");
+
+    res.status(200).json({ success: true,user: req.blogUser, blogs });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
 
-// ✅ Get Single Blog by ID
+// ✅ Get Single Blog by ID + increment views
 export const getBlogById = async (req, res) => {
   try {
-    const blog = await Blog.findById(req.params.id);
+    const blog = await Blog.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { views: 1 } },
+      { new: true }
+    ).populate("author", "name email");
+
     if (!blog) {
-      return res.status(404).json({ success: false, message: "Blog not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Blog not found" });
     }
+
     res.status(200).json({ success: true, blog });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
 
-// ✅ Delete Blog (Admin only)
+// ✅ Delete Blog (Admin or Owner)
 export const deleteBlog = async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
+
     if (!blog) {
-      return res.status(404).json({ success: false, message: "Blog not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Blog not found" });
     }
+
+    const userId = getCurrentUserId(req);
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Not authenticated" });
+    }
+
+    // If it's blog user, only owner can delete
+    if (req.blogUser && blog.author.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not allowed to delete this blog",
+      });
+    }
+
+    // Admin (req.user) can delete any blog
+
     await blog.deleteOne();
-    res.status(200).json({ success: true, message: "Blog deleted successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Blog deleted successfully" });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
-
 
 export const updateBlog = async (req, res) => {
   try {
@@ -88,7 +146,25 @@ export const updateBlog = async (req, res) => {
     const blog = await Blog.findById(req.params.id);
 
     if (!blog) {
-      return res.status(404).json({ success: false, message: "Blog not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Blog not found" });
+    }
+
+    const userId = getCurrentUserId(req);
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Not authenticated" });
+    }
+
+    // Blog user can only edit own blog
+    if (req.blogUser && blog.author.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not allowed to edit this blog",
+      });
     }
 
     const newData = {
@@ -107,9 +183,12 @@ export const updateBlog = async (req, res) => {
         await cloudinary.uploader.destroy(blog.thumbnail.public_id);
       }
       // Upload new
-      const uploadResult = await cloudinary.uploader.upload(thumbnail.tempFilePath, {
-        folder: "PORTFOLIO BLOG IMAGES",
-      });
+      const uploadResult = await cloudinary.uploader.upload(
+        thumbnail.tempFilePath,
+        {
+          folder: "PORTFOLIO BLOG IMAGES",
+        }
+      );
       newData.thumbnail = {
         public_id: uploadResult.public_id,
         url: uploadResult.secure_url,
@@ -136,4 +215,64 @@ export const updateBlog = async (req, res) => {
   }
 };
 
+// ✅ Get Blogs of logged-in BlogUser
+export const getMyBlogs = async (req, res) => {
+  try {
+    const blogs = await Blog.find({ author: req.blogUser._id })
+      .sort({ createdAt: -1 })
+      .populate("author", "name email");
 
+    res.status(200).json({
+      success: true,
+      user: req.blogUser,   // IMPORTANT — dashboard me name yahi se milega
+      blogs,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+
+// ✅ Like / Unlike a blog
+export const toggleLikeBlog = async (req, res) => {
+  try {
+    const blog = await Blog.findById(req.params.id);
+
+    if (!blog) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Blog not found" });
+    }
+
+    const userId = req.blogUser._id.toString();
+    const alreadyLiked = blog.likedBy.some(
+      (u) => u.toString() === userId
+    );
+
+    if (alreadyLiked) {
+      // unlike
+      blog.likedBy = blog.likedBy.filter((u) => u.toString() !== userId);
+      blog.likes = Math.max(0, blog.likes - 1);
+    } else {
+      blog.likedBy.push(userId);
+      blog.likes += 1;
+    }
+
+    await blog.save();
+
+    res.status(200).json({
+      success: true,
+      blog,
+      message: alreadyLiked ? "Like removed" : "Blog liked",
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
+  }
+};

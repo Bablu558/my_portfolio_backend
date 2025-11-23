@@ -28,6 +28,26 @@ thumbnail: {
       type: String,
       required: [true, "Please enter blog content"],
     },
+    author: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "BlogUser",
+      required: true,
+    },
+    views: {
+      type: Number,
+      default: 0,
+    },
+    likes: {
+      type: Number,
+      default: 0,
+    },
+        likedBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "BlogUser",
+      },
+    ],
+
   },
   { timestamps: true }
 );

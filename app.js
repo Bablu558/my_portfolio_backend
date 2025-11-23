@@ -14,6 +14,7 @@ import projectRouter from "./router/projectRouter.js";
 import certificateRouter from "./router/certificateRouter.js";
 import ratingRouter from "./router/ratingRouter.js";
 import blogRouter from "./router/blogRoute.js";
+import blogUserRouter from "./router/blogUserRouter.js";
 import sitemapRouter from "./router/sitemapRouter.js";
 
 const app = express();
@@ -76,6 +77,7 @@ app.use("/api/v1/project", projectRouter);
 app.use("/api/v1/certificate", certificateRouter);
 app.use("/api/v1/rating", ratingRouter);
 app.use("/api/v1/blog", blogRouter);
+app.use("/api/v1/blog-user", blogUserRouter);
 app.use("/", sitemapRouter);
 
 // ✅ Status Page
