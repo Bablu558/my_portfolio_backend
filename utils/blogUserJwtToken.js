@@ -5,7 +5,7 @@ export const generateBlogUserToken = (user, message, statusCode, res) => {
     .status(statusCode)
     .cookie("blogToken", token, {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      httpOnly: false,  // Postman ke liye off
+      httpOnly: true,  // Postman ke liye off
       secure: isProd,                                     // Render → TRUE
       sameSite: isProd ? "None" : "Lax",   // local dev ke liye
     })
