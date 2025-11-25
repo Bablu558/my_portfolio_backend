@@ -22,6 +22,10 @@ const blogUserSchema = new mongoose.Schema(
       minlength: [6, "Password must be at least 6 characters"],
       select: false,
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
@@ -29,7 +33,12 @@ const blogUserSchema = new mongoose.Schema(
 // Hash password before save
 blogUserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, 10);
+
+  // Ensure plain password only
+  if (this.password && !this.password.startsWith("$2b$")) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+
   next();
 });
 
@@ -38,7 +47,7 @@ blogUserSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Generate JWT
+// Generate JWT (auth token)
 blogUserSchema.methods.generateJsonWebToken = function () {
   return jwt.sign({ id: this._id }, process.env.JWT_SEC_KEY, {
     expiresIn: process.env.JWT_EXPIRES,

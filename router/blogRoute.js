@@ -29,5 +29,4 @@ router.put("/user/update/:id", isBlogUserAuthenticated, updateBlog);
 router.delete("/user/delete/:id", isBlogUserAuthenticated, deleteBlog);
 router.get("/user/myblogs", isBlogUserAuthenticated, getMyBlogs);
 router.put("/like/:id", toggleLikeBlog);
-
 export default router;

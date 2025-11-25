@@ -1,8 +1,8 @@
-// router/blogUserRouter.js
 import express from "express";
 import {
   registerBlogUser,
   loginBlogUser,
+   verifyBlogUser,
   loadBlogUser,
   logoutBlogUser,
 } from "../controller/blogUserController.js";
@@ -12,6 +12,7 @@ const router = express.Router();
 
 router.post("/signup", registerBlogUser);
 router.post("/login", loginBlogUser);
+router.get("/verify/:token", verifyBlogUser);
 router.get("/me", isBlogUserAuthenticated, loadBlogUser);
 router.get("/logout", isBlogUserAuthenticated, logoutBlogUser);
 
