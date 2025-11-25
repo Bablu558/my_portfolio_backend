@@ -42,13 +42,14 @@ unverifiedUsers.set(cleanedEmail, {
 
   const verifyUrl = `${process.env.FRONTEND_URL}/blog-user/verify/${vToken}`;
 
-  await sendEmail({
-    email: cleanedEmail,
-    subject: "Verify your TechBlog account",
-    name,
-    message: `Verify your email: ${verifyUrl}`,
-    url: verifyUrl,
-  });
+  // await sendEmail({
+  //   email: cleanedEmail,
+  //   subject: "Verify your TechBlog account",
+  //   name,
+  //   message: `Verify your email: ${verifyUrl}`,
+  //   url: verifyUrl,
+  // });
+console.log("Verification Email URL:", verifyUrl);
 
   res.status(200).json({
     success: true,
