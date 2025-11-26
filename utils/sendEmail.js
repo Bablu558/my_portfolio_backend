@@ -9,7 +9,7 @@ export const sendEmail = async (options) => {
     const transporter = nodeMailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT), // 👈 important!
-      secure: true, // Zoho needs SSL on port 465
+      secure: false, // Zoho needs SSL on port 465
       auth: {
         user: process.env.SMTP_MAIL,
         pass: process.env.SMTP_PASSWORD,
