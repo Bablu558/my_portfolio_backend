@@ -48,6 +48,8 @@ app.use(
       "http://localhost:5175",
       "https://bablu-portfolio-dashboard.netlify.app",
       "https://bablu-kumar.netlify.app",
+      "https://bablukumar.online",
+      "https://www.bablukumar.online",
       "https://tech-blogs-by-bablu-kumar.netlify.app",
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
