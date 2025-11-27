@@ -1,6 +1,6 @@
 import { Rating } from "../models/ratingSchema.js";
 
-// POST: Save new rating
+// Save new rating
 export const addRating = async (req, res) => {
   try {
     const { stars, Name, messagee } = req.body;

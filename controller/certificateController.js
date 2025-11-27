@@ -1,4 +1,3 @@
-// backend/controllers/certificateController.js
 import { catchAsyncErrors } from "../middleware/catchAsyncErrors.js";
 import ErrorHandler from "../middleware/error.js";
 import { Certificate } from "../models/certificateSchema.js";

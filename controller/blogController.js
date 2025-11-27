@@ -39,7 +39,7 @@ export const createBlog = async (req, res) => {
       title,
       category,
       shortDescription,
-      content, // Quill HTML
+      content, 
       thumbnail: {
         public_id: uploadResult.public_id,
         url: uploadResult.secure_url,
@@ -224,7 +224,7 @@ export const getMyBlogs = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      user: req.blogUser,   // IMPORTANT — dashboard me name yahi se milega
+      user: req.blogUser,   
       blogs,
     });
 

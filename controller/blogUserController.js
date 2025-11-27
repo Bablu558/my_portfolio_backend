@@ -1,4 +1,4 @@
-// controller/blogUserController.js
+
 import { BlogUser } from "../models/blogUserSchema.js";
 import { generateBlogUserToken } from "../utils/blogUserJwtToken.js";
 import { catchAsyncErrors } from "../middleware/catchAsyncErrors.js";
@@ -67,7 +67,7 @@ export const verifyBlogUser = catchAsyncErrors(async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_VERIFY_SECRET);
 
-    // Double-check: user already exists?
+    // Double-check: user already exists
     const existing = await BlogUser.findOne({ email: decoded.email });
     if (existing) {
       return next(new ErrorHandler("User already exists", 400));

@@ -38,11 +38,12 @@ export const sendEmail = async (options) => {
         ">
         Verify Email
       </a>
-      <p>If the button doesn’t work, use this link:</p>
-      <p><a href="${options.url}">${options.url}</a></p>
       <p style="color:red; font-weight:bold; margin-top:10px;">
         ⏳ This verification link will expire in <strong>${options.expiresIn || "10 minutes"}</strong>.
       </p>
+      <p>If the button doesn’t work, use this link:</p>
+      <p><a href="${options.url}">${options.url}</a></p>
+      
       <br>
       <p>If you did not request this email, simply ignore it.</p>
       <p>Thanks,<br>TechBlog Team</p>

@@ -1,4 +1,4 @@
-// middleware/blogAuth.js
+
 import jwt from "jsonwebtoken";
 import { BlogUser } from "../models/blogUserSchema.js";
 import { catchAsyncErrors } from "./catchAsyncErrors.js";

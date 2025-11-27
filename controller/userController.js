@@ -12,8 +12,7 @@ export const register = catchAsyncErrors(async (req, res, next) => {
   }
   const { avatar } = req.files;
 
-  //POSTING AVATAR
-  // console.log("AVATAR",avatar)
+  
   const cloudinaryResponseForAvatar = await cloudinary.uploader.upload(
     avatar.tempFilePath,
     { folder: "PORTFOLIO_AVATAR" }
@@ -26,10 +25,10 @@ export const register = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Failed to upload avatar to Cloudinary", 500));
   }
 
-  //POSTING RESUME
+  
   const { resume } = req.files;
 
-  //POSTING AVATAR
+  
   // console.log("MyResume",resume)
   const cloudinaryResponseForResume = await cloudinary.uploader.upload(
     resume.tempFilePath,
@@ -68,12 +67,12 @@ export const register = catchAsyncErrors(async (req, res, next) => {
     facebookURL,
     linkedInURL,
     avatar: {
-      public_id: cloudinaryResponseForAvatar.public_id, // Set your cloudinary public_id here
-      url: cloudinaryResponseForAvatar.secure_url, // Set your cloudinary secure_url here
+      public_id: cloudinaryResponseForAvatar.public_id, 
+      url: cloudinaryResponseForAvatar.secure_url, 
     },
     resume: {
-      public_id: cloudinaryResponseForResume.public_id, // Set your cloudinary public_id here
-      url: cloudinaryResponseForResume.secure_url, // Set your cloudinary secure_url here
+      public_id: cloudinaryResponseForResume.public_id,
+      url: cloudinaryResponseForResume.secure_url, 
     },
   });
   generateToken(user, "Registered!", 201, res);

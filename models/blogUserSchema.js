@@ -1,4 +1,3 @@
-// models/blogUserSchema.js
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -34,7 +33,7 @@ const blogUserSchema = new mongoose.Schema(
 blogUserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
-  // Ensure plain password only
+  
   if (this.password && !this.password.startsWith("$2b$")) {
     this.password = await bcrypt.hash(this.password, 10);
   }

@@ -28,8 +28,8 @@ export const addNewApplication = catchAsyncErrors(async (req, res, next) => {
   const softwareApplication = await SoftwareApplication.create({
     name,
     svg: {
-      public_id: cloudinaryResponse.public_id, // Set your cloudinary public_id here
-      url: cloudinaryResponse.secure_url, // Set your cloudinary secure_url here
+      public_id: cloudinaryResponse.public_id, 
+      url: cloudinaryResponse.secure_url, 
     },
   });
   res.status(201).json({
