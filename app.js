@@ -50,6 +50,7 @@ app.use(
       "https://bablu-kumar.netlify.app",
       "https://bablukumar.online",
       "https://www.bablukumar.online",
+      "https://admin.bablukumar.online",
       "https://tech-blogs-by-bablu-kumar.netlify.app",
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
