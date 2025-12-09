@@ -6,6 +6,11 @@ const blogSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please enter blog title"],
     },
+        slug: {
+  type: String,
+  unique: true,
+  required: true,
+},
     category: {
       type: String,
       required: [true, "Please enter category"],
@@ -33,6 +38,8 @@ thumbnail: {
       ref: "BlogUser",
       required: true,
     },
+
+
     views: {
       type: Number,
       default: 0,

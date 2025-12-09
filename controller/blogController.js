@@ -1,9 +1,11 @@
 import { Blog } from "../models/blogSchema.js";
 import { v2 as cloudinary } from "cloudinary";
+import slugify from "slugify";
+import crypto from "crypto";
 
 // Common helper to get current user id (admin or blog-user)
 const getCurrentUserId = (req) => {
-  if (req.blogUser) return req.blogUser._id; // blog user
+  if (req.blogUser) return req.blogUser._id; 
   if (req.user) return req.user._id; // admin user (old)
   return null;
 };
@@ -12,6 +14,8 @@ export const createBlog = async (req, res) => {
   try {
     const { title, category, shortDescription, content } = req.body;
     const { thumbnail } = req.files || {};
+const rawSlug = slugify(title, { lower: true, strict: true });
+const uniqueSlug = `${rawSlug}-${crypto.randomBytes(4).toString("hex")}`;
 
     const userId = getCurrentUserId(req);
 
@@ -40,6 +44,7 @@ export const createBlog = async (req, res) => {
       category,
       shortDescription,
       content, 
+      slug: uniqueSlug,
       thumbnail: {
         public_id: uploadResult.public_id,
         url: uploadResult.secure_url,
@@ -99,6 +104,24 @@ export const getBlogById = async (req, res) => {
       .json({ success: false, message: "Server error", error: error.message });
   }
 };
+export const getBlogBySlug = async (req, res) => {
+  try {
+    const blog = await Blog.findOneAndUpdate(
+      { slug: req.params.slug },
+      { $inc: { views: 1 } },
+      { new: true }
+    ).populate("author", "name email");
+
+    if (!blog) {
+      return res.status(404).json({ success: false, message: "Blog not found" });
+    }
+
+    res.status(200).json({ success: true, blog });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
 
 // ✅ Delete Blog (Admin or Owner)
 export const deleteBlog = async (req, res) => {
@@ -166,13 +189,19 @@ export const updateBlog = async (req, res) => {
         message: "You are not allowed to edit this blog",
       });
     }
-
+ 
+   let newSlug = blog.slug;
+   if(title && title !== blog.title){
+    const rawSlug = slugify(title,{lower:true,strict:true});
+     newSlug = `${rawSlug}-${crypto.randomBytes(4).toString("hex")}`;
+   }
     const newData = {
       title: title || blog.title,
       category: category || blog.category,
       shortDescription: shortDescription || blog.shortDescription,
       content: content || blog.content,
       thumbnail: blog.thumbnail,
+      slug:newSlug,
     };
 
     // If new image provided
