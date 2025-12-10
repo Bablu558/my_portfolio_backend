@@ -7,13 +7,7 @@ export const addRating = async (req, res) => {
 
   try {
     const { stars, Name, messagee } = req.body;
-    console.log("➡ RESEND KEY:", process.env.RESEND_API_KEY ? "AVAILABLE ✔" : "NOT FOUND ❌");
-    console.log("📨 sendRatingEmail() CALLED");
-  console.log("➡ Stars:", stars);
-  console.log("➡ Name:", Name);
-  console.log("➡ Message:", messagee);
-  console.log("➡ ADMIN MAIL:", process.env.CONTACT_SMTP_MAIL);
-    if (!stars || stars < 1 || stars > 5) {
+ if (!stars || stars < 1 || stars > 5) {
       return res.status(400).json({ message: "Invalid rating value!" });
     }
     if (!Name || !messagee) {
