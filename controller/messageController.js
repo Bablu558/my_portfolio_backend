@@ -1,17 +1,28 @@
 import { Message } from "../models/messageSchema.js";
 import { catchAsyncErrors } from "../middleware/catchAsyncErrors.js";
 import ErrorHandler from "../middleware/error.js";
-
+import { sendMessageEmail } from "../utils/sendMessageEmail.js";
 export const sendMessage = catchAsyncErrors(async (req, res, next) => {
   const { senderName, subject, message } = req.body;
+
   if (!senderName || !subject || !message) {
     return next(new ErrorHandler("Please Fill Full Form!", 400));
   }
+
+  // save in DB
   const data = await Message.create({ senderName, subject, message });
+
+  // send email
+  await sendMessageEmail({
+    name: senderName,
+    subject,
+    message
+  });
+
   res.status(201).json({
     success: true,
-    message: "Message Sent",
-    data,
+    message: "Message Sent Successfully!",
+    data
   });
 });
 
