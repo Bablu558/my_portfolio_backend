@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 
-export const sendMessageEmail = async ({ name, subject, message }) => {
+export const sendMessageEmail = async ({ name, subject, message,email  }) => {
   const resend = new Resend(process.env.RESEND_API_KEY);
   const adminEmail = process.env.CONTACT_SMTP_MAIL;
 
@@ -42,6 +42,8 @@ export const sendMessageEmail = async ({ name, subject, message }) => {
       <p style="margin-top:12px; font-size:16px;">
         <strong style="color:#38bdf8;">Message:</strong>
       </p>
+      <p>${email ? `<p><strong>Email:</strong> ${email}</p>` : ""}
+         </p>
       <p style="
         margin-top:6px;
         padding:12px;

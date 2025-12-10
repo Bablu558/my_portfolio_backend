@@ -3,20 +3,21 @@ import { catchAsyncErrors } from "../middleware/catchAsyncErrors.js";
 import ErrorHandler from "../middleware/error.js";
 import { sendMessageEmail } from "../utils/sendMessageEmail.js";
 export const sendMessage = catchAsyncErrors(async (req, res, next) => {
-  const { senderName, subject, message } = req.body;
+  const { senderName, subject, message,email  } = req.body;
 
   if (!senderName || !subject || !message) {
     return next(new ErrorHandler("Please Fill Full Form!", 400));
   }
 
   // save in DB
-  const data = await Message.create({ senderName, subject, message });
+  const data = await Message.create({ senderName, subject, message,email  });
 
   // send email
   await sendMessageEmail({
     name: senderName,
     subject,
-    message
+    message,
+    email 
   });
 
   res.status(201).json({
