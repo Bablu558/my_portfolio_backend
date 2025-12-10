@@ -4,7 +4,7 @@ const router = express.Router();
 
 router.get("/sitemap.xml", async (req, res) => {
   try {
-    const FRONTEND_URL = "https://tech-blogs-by-bablu-kumar.netlify.app";
+    const FRONTEND_URL = "https://blogs.bablukumar.online";
     const BACKEND_API = "https://my-portfolio-backend-5p6u.onrender.com/api/v1/blog/getall";
 
     // ✅ Fetch all blogs (without axios)
