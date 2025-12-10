@@ -1,10 +1,18 @@
 import { Rating } from "../models/ratingSchema.js";
+import { sendRatingEmail } from "../utils/sendRatingEmail.js";
 
 // Save new rating
 export const addRating = async (req, res) => {
+
+
   try {
     const { stars, Name, messagee } = req.body;
-
+    console.log("➡ RESEND KEY:", process.env.RESEND_API_KEY ? "AVAILABLE ✔" : "NOT FOUND ❌");
+    console.log("📨 sendRatingEmail() CALLED");
+  console.log("➡ Stars:", stars);
+  console.log("➡ Name:", Name);
+  console.log("➡ Message:", messagee);
+  console.log("➡ ADMIN MAIL:", process.env.CONTACT_SMTP_MAIL);
     if (!stars || stars < 1 || stars > 5) {
       return res.status(400).json({ message: "Invalid rating value!" });
     }
@@ -13,6 +21,12 @@ export const addRating = async (req, res) => {
     }
 
     const rating = await Rating.create({ stars, Name, messagee });
+await sendRatingEmail({
+  stars,
+  name: Name,
+  message: messagee,
+});
+
     res.status(201).json({ success: true, rating });
   } catch (error) {
     res.status(500).json({ message: "Error saving rating", error });
