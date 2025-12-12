@@ -60,10 +60,10 @@ const uniqueSlug = `${rawSlug}-${crypto.randomBytes(4).toString("hex")}`;
   } catch (error) {
     console.error("Error creating blog:", error);
     res.status(500).json({
-      success: false,
-      message: "Server error",
-      error: error.message,
-    });
+  success: false,
+  message: error.message || "Server error",
+});
+
   }
 };
 
@@ -237,10 +237,10 @@ export const updateBlog = async (req, res) => {
   } catch (error) {
     console.error("Error updating blog:", error);
     res.status(500).json({
-      success: false,
-      message: "Server error",
-      error: error.message,
-    });
+  success: false,
+  message: error.message || "Server error",
+});
+
   }
 };
 
