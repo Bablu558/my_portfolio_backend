@@ -4,7 +4,7 @@ export const sendRatingEmail = async ({ stars, name, message }) => {
   const resend = new Resend(process.env.RESEND_API_KEY);
   const adminEmail = process.env.CONTACT_SMTP_MAIL;
 
-  // Beautiful UI for Rating Email
+  
   const htmlBody = `
   <div style="
     font-family: 'Arial', sans-serif;

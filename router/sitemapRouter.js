@@ -7,7 +7,7 @@ router.get("/sitemap.xml", async (req, res) => {
     const FRONTEND_URL = "https://blogs.bablukumar.online";
     const BACKEND_API = "https://my-portfolio-backend-5p6u.onrender.com/api/v1/blog/getall";
 
-    // ✅ Fetch all blogs (without axios)
+    // Fetch all blogs 
     const response = await fetch(BACKEND_API);
     const data = await response.json();
     const blogs = data.blogs || [];
@@ -33,7 +33,7 @@ router.get("/sitemap.xml", async (req, res) => {
     // Dynamic blog URLs
     blogs.forEach((blog) => {
       xml += `  <url>\n`;
-      xml += `    <loc>${FRONTEND_URL}/blog/${blog._id}</loc>\n`;
+      xml += `    <loc>${FRONTEND_URL}/blog/${blog.slug}</loc>\n`;
       xml += `    <lastmod>${new Date(blog.updatedAt).toISOString()}</lastmod>\n`;
       xml += `    <changefreq>weekly</changefreq>\n`;
       xml += `    <priority>0.8</priority>\n`;
@@ -42,7 +42,7 @@ router.get("/sitemap.xml", async (req, res) => {
 
     xml += `</urlset>`;
 
-    // ✅ Send as XML
+    // Send as XML
     res.header("Content-Type", "application/xml");
     res.send(xml);
   } catch (error) {

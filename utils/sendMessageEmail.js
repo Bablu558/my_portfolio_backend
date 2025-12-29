@@ -4,7 +4,7 @@ export const sendMessageEmail = async ({ name, subject, message,email  }) => {
   const resend = new Resend(process.env.RESEND_API_KEY);
   const adminEmail = process.env.CONTACT_SMTP_MAIL;
 
-  // 🔥 Beautiful Dark UI Email HTML
+  
   const htmlBody = `
   <div style="
     font-family: 'Arial', sans-serif;

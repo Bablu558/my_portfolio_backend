@@ -8,6 +8,8 @@ import {
   getMyBlogs,
   toggleLikeBlog,
   getBlogBySlug,
+  addCommentToBlog,
+  deleteCommentFromBlog,
 } from "../controller/blogController.js";
 import { isAuthenticated } from "../middleware/auth.js";
 import { isBlogUserAuthenticated } from "../middleware/blogAuth.js";
@@ -30,7 +32,9 @@ router.post("/user/create", isBlogUserAuthenticated, createBlog);
 router.put("/user/update/:id", isBlogUserAuthenticated, updateBlog);
 router.delete("/user/delete/:id", isBlogUserAuthenticated, deleteBlog);
 router.get("/user/myblogs", isBlogUserAuthenticated, getMyBlogs);
-router.put("/like/:id", toggleLikeBlog);
+router.post("/like/:id", toggleLikeBlog);
 router.get("/get/slug/:slug", getBlogBySlug);
-
+router.get("/user/blog/:id",isBlogUserAuthenticated,getBlogById);
+router.post("/comment/:id", addCommentToBlog);
+router.delete("/comment/:blogId/:commentId", deleteCommentFromBlog)
 export default router;

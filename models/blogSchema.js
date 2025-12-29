@@ -39,21 +39,53 @@ thumbnail: {
       required: true,
     },
 
+  comments: [
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    message: {
+      type: String,
+      required: true,
+    },
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5,
+      default: null,
+    },
+    hash:String,
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+],
+  
+viewsMeta: [
+  {
+    hash: String,
+    viewedAt: Date,
+  },
+],
+
 
     views: {
       type: Number,
       default: 0,
     },
-    likes: {
-      type: Number,
-      default: 0,
-    },
-        likedBy: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "BlogUser",
-      },
-    ],
+likes: {
+  type: Number,
+  default: 0,
+},
+likedBy: [
+  {
+    hash: String,
+    likedAt: Date,
+  },
+],
+
 
   },
   { timestamps: true }

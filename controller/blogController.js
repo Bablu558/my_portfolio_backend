@@ -2,6 +2,7 @@ import { Blog } from "../models/blogSchema.js";
 import { v2 as cloudinary } from "cloudinary";
 import slugify from "slugify";
 import crypto from "crypto";
+import { generateViewerHash } from "../utils/viewHash.js";
 
 // Common helper to get current user id (admin or blog-user)
 const getCurrentUserId = (req) => {
@@ -67,7 +68,7 @@ const uniqueSlug = `${rawSlug}-${crypto.randomBytes(4).toString("hex")}`;
   }
 };
 
-// ✅ Get All Blogs
+//  Get All Blogs
 export const getAllBlogs = async (req, res) => {
   try {
     const blogs = await Blog.find()
@@ -82,13 +83,14 @@ export const getAllBlogs = async (req, res) => {
   }
 };
 
-// ✅ Get Single Blog by ID + increment views
+// Get Single Blog by ID + increment views
 export const getBlogById = async (req, res) => {
   try {
     const blog = await Blog.findByIdAndUpdate(
       req.params.id,
       { $inc: { views: 1 } },
-      { new: true }
+      { new: true,
+      timestamps: false,}
     ).populate("author", "name email");
 
     if (!blog) {
@@ -106,24 +108,73 @@ export const getBlogById = async (req, res) => {
 };
 export const getBlogBySlug = async (req, res) => {
   try {
-    const blog = await Blog.findOneAndUpdate(
-      { slug: req.params.slug },
-      { $inc: { views: 1 } },
-      { new: true }
-    ).populate("author", "name email");
+    // Read blog
+    const blog = await Blog.findOne({ slug: req.params.slug })
+      .populate("author", "name email");
 
     if (!blog) {
-      return res.status(404).json({ success: false, message: "Blog not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Blog not found" });
     }
 
-    res.status(200).json({ success: true, blog });
+    //  Viewer hash
+    const viewerHash = generateViewerHash(req);
+    const now = new Date();
+    const ONE_HOUR = 60 * 60 * 1000;
+
+    const alreadyViewed = blog.viewsMeta.some(
+      (v) =>
+        v.hash === viewerHash &&
+        now - new Date(v.viewedAt) < ONE_HOUR
+    );
+
+    //  Increment only once per hour
+    if (!alreadyViewed) {
+      await Blog.updateOne(
+        { _id: blog._id },
+        {
+          $inc: { views: 1 },
+          $push: {
+            viewsMeta: {
+              hash: viewerHash,
+              viewedAt: now,
+            },
+          },
+        },
+        { timestamps: false }
+      );
+    }
+
+    //  Respond
+   // ADD canDelete flag to each comment
+const blogWithPermission = {
+  ...blog.toObject(),
+  comments: blog.comments.map((c) => ({
+    ...c.toObject(),
+    canDelete: c.hash === viewerHash,
+  })),
+};
+
+// Respond
+res.status(200).json({
+  success: true,
+  blog: blogWithPermission,
+});
+
+
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    console.error("getBlogBySlug error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
 
 
-// ✅ Delete Blog (Admin or Owner)
+
+//  Delete Blog (Admin or Owner)
 export const deleteBlog = async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
@@ -244,11 +295,11 @@ export const updateBlog = async (req, res) => {
   }
 };
 
-// ✅ Get Blogs of logged-in BlogUser
+// Get Blogs of logged-in BlogUser
 export const getMyBlogs = async (req, res) => {
   try {
     const blogs = await Blog.find({ author: req.blogUser._id })
-      .sort({ createdAt: -1 })
+      .sort({ views: -1, createdAt: -1 })
       .populate("author", "name email");
 
     res.status(200).json({
@@ -267,41 +318,152 @@ export const getMyBlogs = async (req, res) => {
 };
 
 
-// ✅ Like / Unlike a blog
+//  Like / Unlike a blog
 export const toggleLikeBlog = async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
 
     if (!blog) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Blog not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found",
+      });
     }
 
-    const userId = req.blogUser._id.toString();
+    const viewerHash = generateViewerHash(req);
+
     const alreadyLiked = blog.likedBy.some(
-      (u) => u.toString() === userId
+      (item) => item.hash === viewerHash
     );
 
+    let updateQuery;
+
     if (alreadyLiked) {
-      // unlike
-      blog.likedBy = blog.likedBy.filter((u) => u.toString() !== userId);
-      blog.likes = Math.max(0, blog.likes - 1);
+      //  UNLIKE
+      updateQuery = {
+        $inc: { likes: -1 },
+        $pull: {
+          likedBy: { hash: viewerHash },
+        },
+      };
     } else {
-      blog.likedBy.push(userId);
-      blog.likes += 1;
+      //  LIKE
+      updateQuery = {
+        $inc: { likes: 1 },
+        $push: {
+          likedBy: {
+            hash: viewerHash,
+            likedAt: new Date(),
+          },
+        },
+      };
     }
 
-    await blog.save();
+    
+    //  IMPORTANT PART
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      blog._id,
+      updateQuery,
+      {
+        new: true,
+        timestamps: false, //  updatedAt WILL NOT CHANGE
+      }
+    ).populate("author", "name email");
 
     res.status(200).json({
       success: true,
-      blog,
-      message: alreadyLiked ? "Like removed" : "Blog liked",
+      blog: updatedBlog,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: "Server error", error: error.message });
+    console.error("Like error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
+
+// addCommentToBlog
+//  Add Comment (Public – No Auth)
+export const addCommentToBlog = async (req, res) => {
+  try {
+    const { name, message, rating } = req.body;
+    const blog = await Blog.findById(req.params.id);
+
+    if (!blog) {
+      return res.status(404).json({ success: false, message: "Blog not found" });
+    }
+
+    const viewerHash = generateViewerHash(req);
+
+    blog.comments.push({
+      name,
+      message,
+      rating,
+      hash: viewerHash,
+    });
+
+    await blog.save();
+
+     const updatedComments = blog.comments.map((c) => ({
+      ...c.toObject(),
+      canDelete: c.hash === viewerHash, // Agar hash match hua toh delete icon dikhega
+    }));
+
+    res.status(200).json({
+      success: true,
+      comments: updatedComments, // Ab frontend ko directly permission ke saath data milega
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+
+
+// Delete Comment 
+// Delete Comment (Optimized & Professional)
+export const deleteCommentFromBlog = async (req, res) => {
+  try {
+    const { blogId, commentId } = req.params;
+    const viewerHash = generateViewerHash(req);
+
+    // 1. Pehle blog ko dhoondo bina comments load kiye (Performance ke liye)
+    const blog = await Blog.findById(blogId);
+    if (!blog) {
+      return res.status(404).json({ success: false, message: "Blog not found" });
+    }
+
+    // 2. Check karo ki comment exist karta hai aur user uska owner hai ya nahi
+    const comment = blog.comments.id(commentId);
+    if (!comment) {
+      return res.status(404).json({ success: false, message: "Comment not found" });
+    }
+
+    if (comment.hash !== viewerHash) {
+      return res.status(403).json({ success: false, message: "You can delete only your own comment" });
+    }
+
+    // 3. PROFESSIONAL WAY: Use $pull to delete only ONE specific comment by ID
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      blogId,
+      { $pull: { comments: { _id: commentId } } }, 
+      { new: true } // Taaki humein delete hone ke baad wali nayi list mile
+    );
+
+    // 4. Response bhejne se pehle permissions reset karein (taaki delete icon dikhte rahein)
+    const commentsWithPermission = updatedBlog.comments.map((c) => ({
+      ...c.toObject(),
+      canDelete: c.hash === viewerHash,
+    }));
+
+    res.status(200).json({
+      success: true,
+      comments: commentsWithPermission,
+    });
+  } catch (error) {
+    console.error("Delete comment error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+

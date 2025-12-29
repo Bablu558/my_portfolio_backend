@@ -7,7 +7,9 @@ import jwt from "jsonwebtoken";
 import { sendEmail } from "../utils/sendEmail.js";
 import bcrypt from "bcrypt";
 import { unverifiedUsers } from "../temp/unverifiedUsers.js";
+import crypto from "crypto";
 
+import { sendResetPasswordEmail } from "../utils/sendResetPasswordEmail.js";
 
 export const registerBlogUser = catchAsyncErrors(async (req, res, next) => {
   const { name, email, password } = req.body;
@@ -92,7 +94,119 @@ export const verifyBlogUser = catchAsyncErrors(async (req, res, next) => {
 });
 
 
+// reset password
+export const forgotBlogUserPassword = catchAsyncErrors(async (req, res, next) => {
+  const { email } = req.body;
 
+  if (!email) {
+    return next(new ErrorHandler("Please enter your email", 400));
+  }
+
+  const user = await BlogUser.findOne({ email: email.toLowerCase() });
+
+  if (!user) {
+    return next(new ErrorHandler("User not found with this email", 404));
+  }
+
+  // Generate reset token
+  const resetToken = crypto.randomBytes(32).toString("hex");
+
+  user.resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 min
+
+  await user.save({ validateBeforeSave: false });
+
+  const resetUrl = `${process.env.FRONTEND_URL}/blog-user/reset-password/${resetToken}`;
+
+await sendResetPasswordEmail({
+  email: user.email,
+  name: user.name,
+  resetUrl,               // SAME NAME AS UTIL
+  expiresIn: "15 minutes",
+});
+console.log("DEBUG resetUrl =>", resetUrl);
+
+  res.status(200).json({
+    success: true,
+    message: "Password reset link sent to your email",
+  });
+});
+
+
+
+export const resetBlogUserPassword = catchAsyncErrors(async (req, res, next) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+const passwordRegex =
+  /^(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>])(?=.*[A-Z]).{8,}$/;
+
+if (!passwordRegex.test(password)) {
+  return next(
+    new ErrorHandler(
+      "Password must be at least 8 characters long, start with an uppercase letter, and contain a number and special character",
+      400
+    )
+  );
+}
+
+
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+
+  const user = await BlogUser.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpire: { $gt: Date.now() },
+  }).select("+password");
+
+  if (!user) {
+    return next(new ErrorHandler("Reset token is invalid or expired", 400));
+  }
+
+  user.password = password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Password reset successful. You can now login.",
+  });
+});
+
+
+export const validateResetToken = catchAsyncErrors(async (req, res, next) => {
+  const { token } = req.params;
+
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+
+  const user = await BlogUser.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpire: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return res.status(400).json({
+      success: false,
+      message: "Reset link is invalid or has already been used",
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Reset token is valid",
+  });
+});
 
 
 export const loginBlogUser = catchAsyncErrors(async (req, res, next) => {

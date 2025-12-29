@@ -3,7 +3,7 @@ import ErrorHandler from "../middleware/error.js";
 import { Certificate } from "../models/certificateSchema.js";
 import { v2 as cloudinary } from "cloudinary";
 
-// ✅ Add New Certificate
+//  Add New Certificate
 export const addNewCertificate = catchAsyncErrors(async (req, res, next) => {
   if (!req.files || Object.keys(req.files).length === 0) {
     return next(new ErrorHandler("Certificate Image Required!", 400));
@@ -44,7 +44,7 @@ export const addNewCertificate = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-// ✅ Update Certificate
+//  Update Certificate
 export const updateCertificate = catchAsyncErrors(async (req, res, next) => {
   console.log("BODY: ", req.body);
   console.log("FILES: ", req.files);
@@ -96,7 +96,7 @@ export const updateCertificate = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-// ✅ Delete Certificate
+//  Delete Certificate
 export const deleteCertificate = catchAsyncErrors(async (req, res, next) => {
   const { id } = req.params;
   const certificate = await Certificate.findById(id);
@@ -115,7 +115,7 @@ export const deleteCertificate = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-// ✅ Get All Certificates
+// Get All Certificates
 export const getAllCertificates = catchAsyncErrors(async (req, res, next) => {
   const certificates = await Certificate.find();
   res.status(200).json({
@@ -124,7 +124,7 @@ export const getAllCertificates = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-// ✅ Get Single Certificate
+//  Get Single Certificate
 export const getSingleCertificate = catchAsyncErrors(async (req, res, next) => {
   const { id } = req.params;
   const certificate = await Certificate.findById(id);

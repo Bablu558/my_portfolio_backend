@@ -19,7 +19,7 @@ import sitemapRouter from "./router/sitemapRouter.js";
 
 const app = express();
 
-// 🌍 Environment setup
+// Environment setup
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import dotenv from "dotenv";
@@ -27,12 +27,12 @@ import dotenv from "dotenv";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// ✅ Load env only locally (Render already has environment vars)
+// Load env only locally (Render already has environment vars)
 if (process.env.NODE_ENV !== "production") {
   dotenv.config({ path: join(__dirname, "config", "config.env") });
-  console.log("✅ Local Mode: .env loaded");
+  console.log(" Local Mode: .env loaded");
 } else {
-  console.log("☁️ Render Mode: Using Render environment variables");
+  console.log("Render Mode: Using Render environment variables");
 }
  
 // console.log("Loaded Mongo URL:", process.env.MONGO_URL);
@@ -73,7 +73,7 @@ app.use(
   })
 );
 
-// ✅ Routes
+// Routes
 app.use("/api/v1/message", messageRouter);
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/timeline", timelineRouter);
@@ -86,7 +86,7 @@ app.use("/api/v1/blog", blogRouter);
 app.use("/api/v1/blog-user", blogUserRouter);
 app.use("/", sitemapRouter);
 
-// ✅ Status Page
+//  Status Page
 app.get("/", async (req, res) => {
   try {
     const dbStatus =
