@@ -8,7 +8,7 @@ import { sendEmail } from "../utils/sendEmail.js";
 import bcrypt from "bcrypt";
 import { unverifiedUsers } from "../temp/unverifiedUsers.js";
 import crypto from "crypto";
-
+import { Blog } from "../models/blogSchema.js";
 import { sendResetPasswordEmail } from "../utils/sendResetPasswordEmail.js";
 
 export const registerBlogUser = catchAsyncErrors(async (req, res, next) => {
@@ -281,4 +281,68 @@ export const logoutBlogUser = catchAsyncErrors(async (req, res, next) => {
       success: true,
       message: "Logged out successfully",
     });
+});
+
+
+
+
+// --- UPDATE PASSWORD ---
+export const updateBlogUserPassword = catchAsyncErrors(async (req, res, next) => {
+  const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword) {
+    return next(new ErrorHandler("Please provide both old and new passwords", 400));
+  }
+
+  // User ko fetch karein password ke saath
+  const user = await BlogUser.findById(req.blogUser._id).select("+password");
+
+  // Old password match karein
+  const isMatch = await user.comparePassword(oldPassword);
+  if (!isMatch) {
+    return next(new ErrorHandler("Old password is incorrect", 401));
+  }
+
+  // New password set karein (Schema handle karega hashing agar pre-save laga hai)
+  user.password = newPassword;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Password updated successfully! 🔒",
+  });
+});
+
+// --- DELETE ACCOUNT PERMANENTLY ---
+export const deleteBlogUserAccount = catchAsyncErrors(async (req, res, next) => {
+  const { password } = req.body; // Frontend se password aayega confirmation ke liye
+
+  if (!password) {
+    return next(new ErrorHandler("Please provide your password to confirm deletion", 400));
+  }
+
+  const user = await BlogUser.findById(req.blogUser._id).select("+password");
+
+  // Password verify karein
+  const isMatch = await user.comparePassword(password);
+  if (!isMatch) {
+    return next(new ErrorHandler("Incorrect password. Deletion denied.", 401));
+  }
+
+  // 1. User ke saare blogs delete karein
+  await Blog.deleteMany({ author: user._id });
+
+  // 2. User account delete karein
+  await user.deleteOne();
+
+  // 3. Cookie clear karein
+  res.status(200).cookie("blogToken", null, {
+    expires: new Date(Date.now()),
+    httpOnly: true,
+    sameSite: "None",
+    secure: true,
+  }).json({
+    success: true,
+    message: "Account and associated blogs deleted successfully.",
+  });
 });

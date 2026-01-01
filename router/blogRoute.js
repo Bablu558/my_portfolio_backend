@@ -18,7 +18,7 @@ const router = express.Router();
 
 // Public routes
 router.get("/getall", getAllBlogs);
-router.get("/get/:id", getBlogById);
+router.get("/get/:slug", getBlogBySlug);
 
 // Admin routes
 router.post("/create",isAuthenticated,  createBlog);
