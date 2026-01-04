@@ -51,8 +51,8 @@ app.use(
       "https://bablukumar.online",
       "https://www.bablukumar.online",
       "https://admin.bablukumar.online",
-      "https://blogs.bablukumar.online",
-      "https://www.blogs.bablukumar.online",
+      "https://blogfire.in",
+      "https://www.blogfire.in",
 
       "https://tech-blogs-by-bablu-kumar.netlify.app",
     ],
