@@ -15,8 +15,50 @@ export const createBlog = async (req, res) => {
   try {
     const { title, category, shortDescription, content } = req.body;
     const { thumbnail } = req.files || {};
-const rawSlug = slugify(title, { lower: true, strict: true });
-const uniqueSlug = `${rawSlug}-${crypto.randomBytes(4).toString("hex")}`;
+
+    // Thumbnail validation
+const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+if (!thumbnail) {
+  return res.status(400).json({
+    success: false,
+    message: "Thumbnail image is required",
+  });
+}
+
+if (!thumbnail.mimetype) {
+  return res.status(400).json({
+    success: false,
+    message: "Invalid file upload",
+  });
+}
+
+if (!allowedTypes.includes(thumbnail.mimetype)) {
+  return res.status(400).json({
+    success: false,
+    message: "Only JPG, PNG, or WEBP images are allowed",
+  });
+}
+
+if (thumbnail.size > MAX_SIZE) {
+  return res.status(400).json({
+    success: false,
+    message: "Thumbnail size must be less than 2MB",
+  });
+}
+
+
+const baseSlug = slugify(title, { lower: true, strict: true });
+
+let slug = baseSlug;
+let counter = 1;
+
+// Check for duplicate slug
+while (await Blog.findOne({ slug })) {
+  slug = `${baseSlug}-${counter}`;
+  counter++;
+}
 
     const userId = getCurrentUserId(req);
 
@@ -33,19 +75,42 @@ const uniqueSlug = `${rawSlug}-${crypto.randomBytes(4).toString("hex")}`;
     }
 
     // Upload to Cloudinary
-    const uploadResult = await cloudinary.uploader.upload(
-      thumbnail.tempFilePath,
-      {
-        folder: "PORTFOLIO BLOG IMAGES",
-      }
-    );
+    // const uploadResult = await cloudinary.uploader.upload(
+    //   thumbnail.tempFilePath,
+    //   {
+    //     folder: "PORTFOLIO BLOG IMAGES",
+    //   }
+    // );
+let uploadResult;
+
+try {
+  uploadResult = await cloudinary.uploader.upload(
+    thumbnail.tempFilePath,
+    {
+      folder: "PORTFOLIO BLOG IMAGES",
+      resource_type: "image",
+      transformation: [
+        { width: 1200, height: 630, crop: "limit" },
+        { quality: "auto" },
+        { fetch_format: "auto" },
+      ],
+    }
+  );
+} catch (err) {
+  return res.status(500).json({
+    success: false,
+    message: "Image upload failed. Please try again.",
+  });
+}
+
 
     const blog = await Blog.create({
       title,
       category,
       shortDescription,
       content, 
-      slug: uniqueSlug,
+      // slug: uniqueSlug,
+      slug:slug,
       thumbnail: {
         public_id: uploadResult.public_id,
         url: uploadResult.secure_url,
@@ -217,7 +282,7 @@ export const deleteBlog = async (req, res) => {
 export const updateBlog = async (req, res) => {
   try {
     const { title, category, shortDescription, content } = req.body;
-    const blog = await Blog.findById(req.params.id);
+    const blog = await Blog.findOne({slug: req.params.slug});
 
     if (!blog) {
       return res
@@ -242,10 +307,23 @@ export const updateBlog = async (req, res) => {
     }
  
    let newSlug = blog.slug;
-   if(title && title !== blog.title){
-    const rawSlug = slugify(title,{lower:true,strict:true});
-     newSlug = `${rawSlug}-${crypto.randomBytes(4).toString("hex")}`;
-   }
+   if (title && title !== blog.title) {
+  const baseSlug = slugify(title, { lower: true, strict: true });
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (
+    await Blog.findOne({
+      slug,
+      _id: { $ne: blog._id },
+    })
+  ) {
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+
+  newSlug = slug;
+}
     const newData = {
       title: title || blog.title,
       category: category || blog.category,
@@ -275,7 +353,7 @@ export const updateBlog = async (req, res) => {
       };
     }
 
-    const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, newData, {
+    const updatedBlog = await Blog.findOneAndUpdate({slug:req.params.slug}, newData, {
       new: true,
       runValidators: true,
     });

@@ -16,6 +16,8 @@ import ratingRouter from "./router/ratingRouter.js";
 import blogRouter from "./router/blogRoute.js";
 import blogUserRouter from "./router/blogUserRouter.js";
 import sitemapRouter from "./router/sitemapRouter.js";
+import { Blog } from "./models/blogSchema.js";
+import path from "path";
 
 const app = express();
 
@@ -85,6 +87,57 @@ app.use("/api/v1/rating", ratingRouter);
 app.use("/api/v1/blog", blogRouter);
 app.use("/api/v1/blog-user", blogUserRouter);
 app.use("/", sitemapRouter);
+
+
+
+// 🔥 BLOG OG PREVIEW ROUTE (For WhatsApp, FB, LinkedIn, Twitter)
+app.get("/blog/:slug", async (req, res) => {
+  try {
+    const userAgent = req.headers["user-agent"] || "";
+
+    const isBot =
+      /WhatsApp|facebookexternalhit|Twitterbot|LinkedInBot/i.test(userAgent);
+
+    // 👤 Normal user → frontend (React handles routing)
+    if (!isBot) {
+      return res.redirect(`https://blogfire.in/blog/${req.params.slug}`);
+    }
+
+    // 🤖 Bot → Send OG HTML
+    const blog = await Blog.findOne({ slug: req.params.slug });
+
+    if (!blog) {
+      return res.status(404).send("Not Found");
+    }
+
+    res.setHeader("Content-Type", "text/html");
+
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <title>${blog.title}</title>
+
+          <meta property="og:type" content="article" />
+          <meta property="og:title" content="${blog.title}" />
+          <meta property="og:description" content="${blog.shortDescription}" />
+          <meta property="og:image" content="${blog.thumbnail.url}" />
+          <meta property="og:url" content="https://blogfire.in/blog/${blog.slug}" />
+
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content="${blog.title}" />
+          <meta name="twitter:description" content="${blog.shortDescription}" />
+          <meta name="twitter:image" content="${blog.thumbnail.url}" />
+        </head>
+        <body></body>
+      </html>
+    `);
+  } catch (err) {
+    console.error("OG Preview Error:", err);
+    res.status(500).send("Server Error");
+  }
+});
+
 
 //  Status Page
 app.get("/", async (req, res) => {

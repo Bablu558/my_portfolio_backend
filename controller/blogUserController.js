@@ -346,3 +346,22 @@ export const deleteBlogUserAccount = catchAsyncErrors(async (req, res, next) => 
     message: "Account and associated blogs deleted successfully.",
   });
 });
+
+// --- UPDATE AVATAR ---
+export const updateBlogUserAvatar = catchAsyncErrors(async (req, res, next) => {
+  const { avatarName } = req.body; // Frontend se seed name aayega (e.g., "Jack")
+
+  if (!avatarName) {
+    return next(new ErrorHandler("Please select an avatar", 400));
+  }
+
+  const user = await BlogUser.findById(req.blogUser._id);
+  user.avatar = avatarName;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Avatar updated successfully! ✨",
+    user,
+  });
+});

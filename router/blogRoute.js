@@ -29,7 +29,7 @@ router.put("/update/:id",isAuthenticated, updateBlog);
 
 // Blog-user routes (new auth)
 router.post("/user/create", isBlogUserAuthenticated, createBlog);
-router.put("/user/update/:id", isBlogUserAuthenticated, updateBlog);
+router.put("/user/update/:slug", isBlogUserAuthenticated, updateBlog);
 router.delete("/user/delete/:id", isBlogUserAuthenticated, deleteBlog);
 router.get("/user/myblogs", isBlogUserAuthenticated, getMyBlogs);
 router.post("/like/:id", toggleLikeBlog);

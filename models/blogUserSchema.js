@@ -27,6 +27,11 @@ const blogUserSchema = new mongoose.Schema(
     },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
+
+    avatar: {
+  type: String,
+  default: "Felix", // Default avatar seed
+},
   },
   { timestamps: true }
 );

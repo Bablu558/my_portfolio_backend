@@ -10,6 +10,7 @@ resetBlogUserPassword,
 validateResetToken,
 updateBlogUserPassword,
 deleteBlogUserAccount,
+updateBlogUserAvatar,
 } from "../controller/blogUserController.js";
 import { isBlogUserAuthenticated } from "../middleware/blogAuth.js";
 
@@ -26,4 +27,5 @@ router.get("/reset-password/validate/:token", validateResetToken);
 // Isse pehle isAuthenticated wala middleware zaroori hai
 router.put("/update-password", isBlogUserAuthenticated, updateBlogUserPassword);
 router.delete("/delete-account", isBlogUserAuthenticated, deleteBlogUserAccount);
+router.put("/update-avatar", isBlogUserAuthenticated, updateBlogUserAvatar);
 export default router;
