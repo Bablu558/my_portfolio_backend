@@ -39,29 +39,46 @@ thumbnail: {
       required: true,
     },
 
-  comments: [
+comments: [
   {
-    name: {
-      type: String,
-      required: true,
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "BlogUser",
+      required: false,
     },
-    message: {
-      type: String,
-      required: true,
+    name: String,
+    message: String,
+    rating: Number,
+    isAuthor: {
+      type: Boolean,
+      default: false,
     },
-    rating: {
-      type: Number,
-      min: 1,
-      max: 5,
-      default: null,
-    },
-    hash:String,
     createdAt: {
       type: Date,
       default: Date.now,
     },
+    replies: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "BlogUser",
+          required: false,
+        },
+        name: String,
+        message: String,
+        isAuthor: {
+          type: Boolean,
+          default: false,
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
 ],
+
   
 viewsMeta: [
   {

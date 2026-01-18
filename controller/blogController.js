@@ -465,37 +465,50 @@ export const toggleLikeBlog = async (req, res) => {
 //  Add Comment (Public – No Auth)
 export const addCommentToBlog = async (req, res) => {
   try {
-    const { name, message, rating } = req.body;
-    const blog = await Blog.findById(req.params.id);
+    const { message, rating } = req.body;
 
-    if (!blog) {
-      return res.status(404).json({ success: false, message: "Blog not found" });
+    if (!message) {
+      return res.status(400).json({
+        success: false,
+        message: "Comment message is required",
+      });
     }
 
-    const viewerHash = generateViewerHash(req);
+    const blog = await Blog.findById(req.params.id);
+    if (!blog) {
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found",
+      });
+    }
+
+    const isAuthor =
+      blog.author.toString() === req.blogUser._id.toString();
 
     blog.comments.push({
-      name,
+      user: req.blogUser._id,
+      name: req.blogUser.name,
       message,
       rating,
-      hash: viewerHash,
+      isAuthor,
     });
 
     await blog.save();
 
-     const updatedComments = blog.comments.map((c) => ({
-      ...c.toObject(),
-      canDelete: c.hash === viewerHash, // Agar hash match hua toh delete icon dikhega
-    }));
-
     res.status(200).json({
       success: true,
-      comments: updatedComments, // Ab frontend ko directly permission ke saath data milega
+      comments: blog.comments,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("Add comment error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
+
+
 
 
 
@@ -504,44 +517,155 @@ export const addCommentToBlog = async (req, res) => {
 export const deleteCommentFromBlog = async (req, res) => {
   try {
     const { blogId, commentId } = req.params;
-    const viewerHash = generateViewerHash(req);
 
-    // 1. Pehle blog ko dhoondo bina comments load kiye (Performance ke liye)
     const blog = await Blog.findById(blogId);
     if (!blog) {
-      return res.status(404).json({ success: false, message: "Blog not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found",
+      });
     }
 
-    // 2. Check karo ki comment exist karta hai aur user uska owner hai ya nahi
     const comment = blog.comments.id(commentId);
     if (!comment) {
-      return res.status(404).json({ success: false, message: "Comment not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Comment not found",
+      });
     }
 
-    if (comment.hash !== viewerHash) {
-      return res.status(403).json({ success: false, message: "You can delete only your own comment" });
+    // 🔐 OWNER CHECK
+    if (comment.user.toString() !== req.blogUser._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You can delete only your own comment",
+      });
     }
 
-    // 3. PROFESSIONAL WAY: Use $pull to delete only ONE specific comment by ID
-    const updatedBlog = await Blog.findByIdAndUpdate(
-      blogId,
-      { $pull: { comments: { _id: commentId } } }, 
-      { new: true } // Taaki humein delete hone ke baad wali nayi list mile
-    );
-
-    // 4. Response bhejne se pehle permissions reset karein (taaki delete icon dikhte rahein)
-    const commentsWithPermission = updatedBlog.comments.map((c) => ({
-      ...c.toObject(),
-      canDelete: c.hash === viewerHash,
-    }));
+    comment.deleteOne();
+    await blog.save();
 
     res.status(200).json({
       success: true,
-      comments: commentsWithPermission,
+      comments: blog.comments,
     });
   } catch (error) {
     console.error("Delete comment error:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
+
+
+export const addReplyToComment = async (req, res) => {
+  try {
+    const { blogId, commentId } = req.params;
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({
+        success: false,
+        message: "Reply message is required",
+      });
+    }
+
+    const blog = await Blog.findById(blogId);
+    if (!blog) {
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found",
+      });
+    }
+
+    const comment = blog.comments.id(commentId);
+    if (!comment) {
+      return res.status(404).json({
+        success: false,
+        message: "Comment not found",
+      });
+    }
+
+    const isAuthor =
+      blog.author.toString() === req.blogUser._id.toString();
+
+    comment.replies.push({
+      user: req.blogUser._id,
+      name: req.blogUser.name,
+      message,
+      isAuthor,
+    });
+
+    await blog.save();
+
+    res.status(200).json({
+      success: true,
+      replies: comment.replies,
+    });
+  } catch (error) {
+    console.error("Add reply error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+
+
+
+
+export const deleteReplyFromComment = async (req, res) => {
+  try {
+    const { blogId, commentId, replyId } = req.params;
+
+    const blog = await Blog.findById(blogId);
+    if (!blog) {
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found",
+      });
+    }
+
+    const comment = blog.comments.id(commentId);
+    if (!comment) {
+      return res.status(404).json({
+        success: false,
+        message: "Comment not found",
+      });
+    }
+
+    const reply = comment.replies.id(replyId);
+    if (!reply) {
+      return res.status(404).json({
+        success: false,
+        message: "Reply not found",
+      });
+    }
+
+    // 🔐 OWNER CHECK
+    if (reply.user.toString() !== req.blogUser._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You can delete only your own reply",
+      });
+    }
+
+    reply.deleteOne();
+    await blog.save();
+
+    res.status(200).json({
+      success: true,
+      replies: comment.replies,
+    });
+  } catch (error) {
+    console.error("Delete reply error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
 

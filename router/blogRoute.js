@@ -10,6 +10,8 @@ import {
   getBlogBySlug,
   addCommentToBlog,
   deleteCommentFromBlog,
+  addReplyToComment,
+  deleteReplyFromComment,
 } from "../controller/blogController.js";
 import { isAuthenticated } from "../middleware/auth.js";
 import { isBlogUserAuthenticated } from "../middleware/blogAuth.js";
@@ -35,6 +37,9 @@ router.get("/user/myblogs", isBlogUserAuthenticated, getMyBlogs);
 router.post("/like/:id", toggleLikeBlog);
 router.get("/get/slug/:slug", getBlogBySlug);
 router.get("/user/blog/:id",isBlogUserAuthenticated,getBlogById);
-router.post("/comment/:id", addCommentToBlog);
-router.delete("/comment/:blogId/:commentId", deleteCommentFromBlog)
+router.post("/comment/:id",isBlogUserAuthenticated, addCommentToBlog);
+router.delete("/comment/:blogId/:commentId",isBlogUserAuthenticated, deleteCommentFromBlog)
+router.post("/comment/:blogId/:commentId/reply",isBlogUserAuthenticated,addReplyToComment);
+router.delete("/comment/:blogId/:commentId/reply/:replyId",isBlogUserAuthenticated,deleteReplyFromComment);
+
 export default router;

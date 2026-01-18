@@ -19,7 +19,7 @@ router.get("/sitemap.xml", async (req, res) => {
     // Static pages
     const staticPages = [
       `${FRONTEND_URL}/`,
-      `${FRONTEND_URL}/blog`,
+      `${FRONTEND_URL}/blogs`,
     ];
 
     staticPages.forEach((url) => {
@@ -33,7 +33,7 @@ router.get("/sitemap.xml", async (req, res) => {
     // Dynamic blog URLs
     blogs.forEach((blog) => {
       xml += `  <url>\n`;
-      xml += `    <loc>${FRONTEND_URL}/blog/${blog.slug}</loc>\n`;
+      xml += `    <loc>${FRONTEND_URL}/blogs/${blog.slug}</loc>\n`;
       xml += `    <lastmod>${new Date(blog.updatedAt).toISOString()}</lastmod>\n`;
       xml += `    <changefreq>weekly</changefreq>\n`;
       xml += `    <priority>0.8</priority>\n`;
