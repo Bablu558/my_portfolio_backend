@@ -16,6 +16,7 @@ import ratingRouter from "./router/ratingRouter.js";
 import blogRouter from "./router/blogRoute.js";
 import blogUserRouter from "./router/blogUserRouter.js";
 import sitemapRouter from "./router/sitemapRouter.js";
+import aiRouter from "./router/aiRouter.js";
 
 const app = express();
 
@@ -34,7 +35,9 @@ if (process.env.NODE_ENV !== "production") {
 } else {
   console.log("Render Mode: Using Render environment variables");
 }
- 
+// console.log("Using model: gemini-1.5-flash");
+//  console.log("Gemini Key:", process.env.GEMINI_API_KEY);
+
 // console.log("Loaded Mongo URL:", process.env.MONGO_URL);
 
 // 🔥 Connect Database
@@ -85,6 +88,7 @@ app.use("/api/v1/rating", ratingRouter);
 app.use("/api/v1/blog", blogRouter);
 app.use("/api/v1/blog-user", blogUserRouter);
 app.use("/", sitemapRouter);
+app.use("/api/v1/ai", aiRouter);
 
 //  Status Page
 app.get("/", async (req, res) => {

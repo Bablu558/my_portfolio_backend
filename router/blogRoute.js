@@ -12,6 +12,9 @@ import {
   deleteCommentFromBlog,
   addReplyToComment,
   deleteReplyFromComment,
+  getLatestBlogs,
+  // generateAITitle,
+  // generateAISummary,
 } from "../controller/blogController.js";
 import { isAuthenticated } from "../middleware/auth.js";
 import { isBlogUserAuthenticated } from "../middleware/blogAuth.js";
@@ -41,5 +44,9 @@ router.post("/comment/:id",isBlogUserAuthenticated, addCommentToBlog);
 router.delete("/comment/:blogId/:commentId",isBlogUserAuthenticated, deleteCommentFromBlog)
 router.post("/comment/:blogId/:commentId/reply",isBlogUserAuthenticated,addReplyToComment);
 router.delete("/comment/:blogId/:commentId/reply/:replyId",isBlogUserAuthenticated,deleteReplyFromComment);
+router.get("/latest", getLatestBlogs);
 
+// // 🔥 AI Routes
+// router.post("/generate-title", generateAITitle);
+// router.post("/generate-summary", generateAISummary);
 export default router;

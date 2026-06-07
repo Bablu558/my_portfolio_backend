@@ -32,6 +32,11 @@ const blogUserSchema = new mongoose.Schema(
   type: String,
   default: "Felix", // Default avatar seed
 },
+bio: {
+  type: String,
+  maxlength: 300,
+  default: ""
+},
   },
   { timestamps: true }
 );

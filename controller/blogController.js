@@ -3,7 +3,7 @@ import { v2 as cloudinary } from "cloudinary";
 import slugify from "slugify";
 import crypto from "crypto";
 import { generateViewerHash } from "../utils/viewHash.js";
-
+import axios from "axios";
 // Common helper to get current user id (admin or blog-user)
 const getCurrentUserId = (req) => {
   if (req.blogUser) return req.blogUser._id; 
@@ -147,6 +147,31 @@ export const getAllBlogs = async (req, res) => {
       .json({ success: false, message: "Server error", error: error.message });
   }
 };
+
+
+
+// ✅ Get Latest Blogs (for Home Page)
+export const getLatestBlogs = async (req, res) => {
+  try {
+    const blogs = await Blog.find()
+      .sort({ createdAt: -1 })      // latest first
+      .limit(3)                     // max 3 blogs
+      .populate("author", "name avatar");
+
+    res.status(200).json({
+      success: true,
+      blogs,
+    });
+  } catch (error) {
+    console.error("getLatestBlogs error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch latest blogs",
+    });
+  }
+};
+
+
 
 // Get Single Blog by ID + increment views
 export const getBlogById = async (req, res) => {
@@ -353,7 +378,7 @@ export const updateBlog = async (req, res) => {
       };
     }
 
-    const updatedBlog = await Blog.findOneAndUpdate({slug:req.params.slug}, newData, {
+    const updatedBlog = await Blog.findByIdAndUpdate(blog._id, newData, {
       new: true,
       runValidators: true,
     });

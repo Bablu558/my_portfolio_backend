@@ -62,20 +62,44 @@ console.log("Verification Email URL:", verifyUrl);
 
 
 
-export const verifyBlogUser = catchAsyncErrors(async (req, res, next) => {
+export const verifyPreview = catchAsyncErrors(async (req, res, next) => {
   const { token } = req.params;
-  if (!token) return next(new ErrorHandler("Invalid or missing token", 400));
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_VERIFY_SECRET);
 
-    // Double-check: user already exists
     const existing = await BlogUser.findOne({ email: decoded.email });
     if (existing) {
       return next(new ErrorHandler("User already exists", 400));
     }
 
-    // Save user now
+    res.status(200).json({
+      success: true,
+      name: decoded.name,
+      email: decoded.email,
+      token,
+    });
+
+  } catch (err) {
+    return next(new ErrorHandler("Verification link expired or invalid", 400));
+  }
+});
+
+export const confirmVerification = catchAsyncErrors(async (req, res, next) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return next(new ErrorHandler("Token missing", 400));
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_VERIFY_SECRET);
+
+    const existing = await BlogUser.findOne({ email: decoded.email });
+    if (existing) {
+      return next(new ErrorHandler("User already exists", 400));
+    }
+
     await BlogUser.create({
       name: decoded.name,
       email: decoded.email,
@@ -83,13 +107,13 @@ export const verifyBlogUser = catchAsyncErrors(async (req, res, next) => {
       isVerified: true,
     });
 
-    return res
-      .status(200)
-      .json({ success: true, message: "Email verified successfully. You can now login." });
+    res.status(200).json({
+      success: true,
+      message: "Email verified successfully. You can now login.",
+    });
 
   } catch (err) {
-    console.error(err);
-    return next(new ErrorHandler("Verification link expired or invalid", 400));
+    return next(new ErrorHandler("Verification failed", 400));
   }
 });
 
@@ -365,3 +389,30 @@ export const updateBlogUserAvatar = catchAsyncErrors(async (req, res, next) => {
     user,
   });
 });
+
+
+export const updateBio = async (req, res) => {
+  try {
+    const userId = req.blogUser._id;
+
+    const { bio } = req.body;
+
+    const user = await BlogUser.findByIdAndUpdate(
+      userId,
+      { bio },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Bio updated successfully",
+      bio: user.bio
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to update bio"
+    });
+  }
+};
