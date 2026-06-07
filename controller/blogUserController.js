@@ -152,7 +152,7 @@ await sendResetPasswordEmail({
   resetUrl,               // SAME NAME AS UTIL
   expiresIn: "15 minutes",
 });
-console.log("DEBUG resetUrl =>", resetUrl);
+// console.log("DEBUG resetUrl =>", resetUrl);
 
   res.status(200).json({
     success: true,
